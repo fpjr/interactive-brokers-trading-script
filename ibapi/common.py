@@ -55,7 +55,7 @@ ListOfHistoricalSessions = list
 class BarData(Object):
     def __init__(self):
         self.date = ""
-        self.open = 0.
+        self.open_ = 0.
         self.high = 0.
         self.low = 0.
         self.close = 0.
@@ -64,7 +64,7 @@ class BarData(Object):
         self.barCount = 0
 
     def __str__(self):
-        return "Date: %s, Open: %s, High: %s, Low: %s, Close: %s, Volume: %s, WAP: %s, BarCount: %s" % (self.date, ibapi.utils.floatMaxString(self.open), 
+        return "Date: %s, Open: %s, High: %s, Low: %s, Close: %s, Volume: %s, WAP: %s, BarCount: %s" % (self.date, ibapi.utils.floatMaxString(self.open_), 
             ibapi.utils.floatMaxString(self.high), ibapi.utils.floatMaxString(self.low), ibapi.utils.floatMaxString(self.close), 
             ibapi.utils.decimalMaxString(self.volume), ibapi.utils.decimalMaxString(self.wap), ibapi.utils.intMaxString(self.barCount))
 
@@ -83,7 +83,7 @@ class RealTimeBar(Object):
 
     def __str__(self):
         return "Time: %s, Open: %s, High: %s, Low: %s, Close: %s, Volume: %s, WAP: %s, Count: %s" % (ibapi.utils.intMaxString(self.time), 
-            ibapi.utils.floatMaxString(self.open), ibapi.utils.floatMaxString(self.high), ibapi.utils.floatMaxString(self.low), 
+            ibapi.utils.floatMaxString(self.open_), ibapi.utils.floatMaxString(self.high), ibapi.utils.floatMaxString(self.low), 
             ibapi.utils.floatMaxString(self.close), ibapi.utils.decimalMaxString(self.volume), ibapi.utils.decimalMaxString(self.wap), 
             ibapi.utils.intMaxString(self.count))
 

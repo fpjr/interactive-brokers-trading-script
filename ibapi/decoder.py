@@ -519,7 +519,7 @@ class Decoder(Object):
         for _ in range(itemCount):
             bar = BarData()
             bar.date = decode(str, fields)
-            bar.open = decode(float, fields)
+            bar.open_ = decode(float, fields)
             bar.high = decode(float, fields)
             bar.low = decode(float, fields)
             bar.close = decode(float, fields)
@@ -542,7 +542,7 @@ class Decoder(Object):
         bar = BarData()
         bar.barCount = decode(int, fields)
         bar.date = decode(str, fields)
-        bar.open = decode(float, fields)
+        bar.open_ = decode(float, fields)
         bar.close = decode(float, fields)
         bar.high = decode(float, fields)
         bar.low = decode(float, fields)
@@ -557,7 +557,7 @@ class Decoder(Object):
 
         bar = RealTimeBar()
         bar.time = decode(int, fields)
-        bar.open = decode(float, fields)
+        bar.open_ = decode(float, fields)
         bar.high = decode(float, fields)
         bar.low = decode(float, fields)
         bar.close = decode(float, fields)
@@ -565,7 +565,7 @@ class Decoder(Object):
         bar.wap = decode(Decimal, fields)
         bar.count = decode(int, fields)
 
-        self.wrapper.realtimeBar(reqId, bar.time, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.wap, bar.count)
+        self.wrapper.realtimeBar(reqId, bar.time, bar.open_, bar.high, bar.low, bar.close, bar.volume, bar.wap, bar.count)
 
     def processTickOptionComputationMsg(self, fields):
         version = self.serverVersion
