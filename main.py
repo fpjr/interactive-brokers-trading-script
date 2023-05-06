@@ -13,6 +13,7 @@ from ibapi.client import *
 from ibapi.wrapper import *
 
 import numpy as np
+import pandas as pd
 import logging
 import time
 import datetime
@@ -23,7 +24,10 @@ port = 7497 # 7496 for live tradig, 7497 for paper trading
 marketDataType = 3 # 3 for delayed, 1 for realtime. https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#ae03b31bb2702ba519ed63c46455872b6
 
 # set type of data to request from API
-requestType = "tick-by-tick"
+requestType = "5sec"
+
+ma5 = np.array([])
+ma20 = np.array([])
 
 def SetupLogger():
     if not os.path.exists("log"):
@@ -85,28 +89,12 @@ class DataFetching(EClient, EWrapper):
             
         else:
             pass
-        
-        # define request market data type
-        #self.reqMarketDataType(marketDataType)
-        
-        # snapshot = False refers to stream of market data, requires active market data subscription
-        # regulatorySnapshot = False, no relevant regulatory snapshot; one time fee 1 cent USD per snapshot
-        #self.reqMktData(orderId, mycontract, "", False, False, [])
-        
-        
-     # this is used for price values from market data request   
-    #def tickPrice(self, reqId, tickType, price, attrib): 
-        # print returned value from ticket price
-     #   print(f"tickPrice. reqId: {reqId}, tickType: {TickTypeEnum.to_str(tickType)}, price: {price}, attribs: {attrib}")
-        
-    # indicate bit size, ask size, daily volume
-    #def tickSize(self, reqId, tickType, size):
-     #   print(f"tickSize. reqId: {reqId}, tickType: {TickTypeEnum.to_str(tickType)}, size: {size}")
     
     def realtimeBar(self, reqId: TickerId, time:int, open_: float, high: float, low: float, close: float, volume: Decimal, wap: Decimal, count: int):
         super().realtimeBar(reqId, time, open_, high, low, close, volume, wap, count)
         print("RealTimeBar. TickerId:", reqId, RealTimeBar(time, -1, open_, high, low, close, volume, wap, count))
-   
+        
+        GenerateBasicTradingSignals.compute(close)
     
     def tickByTickAllLast(self, reqId: int, tickType: int, time: int, price: float, size: Decimal, tickAtrribLast: TickAttribLast, exchange: str, specialConditions: str):
         super().tickByTickAllLast(reqId, tickType, time, price, size, tickAtrribLast, exchange, specialConditions)
@@ -127,25 +115,64 @@ class DataFetching(EClient, EWrapper):
 
 
 class GenerateBasicTradingSignals():
-    pass
+    
+    def compute(close):
+        global ma5
+        global ma20
+        
+        ma5 = np.append(ma5, close)
+        ma20 = np.append(ma20, close)
+        
+        ma5series = pd.Series(ma5)
+        ma20series = pd.Series(ma20)
+        
+        
+        print("5-day moving average: ", ma5series.rolling(5).mean())
+        print("20-day moving average: ", ma20series.rolling(20).mean())
+        
+        if not np.isnan(ma5series.rolling(5).mean().iloc[-1]) and not np.isnan(ma5series.rolling(20).mean().iloc[-1]):
+            print("not null")
+            ExecuteTrade().submitOrder("BUY", 10)
+            
+            
+    def generateTradingSignal():
+        pass
+        
+class ExecuteTrade(EClient, EWrapper):
+    def __init__(self):
+        EClient.__init__(self, self)
+        
+    
+    def nextValidId(self, orderId: int):
+        mycontract = Contract()
+        mycontract.symbol = "IBKR"
+        mycontract.secType = "STK" # security's type
+        mycontract.exchange = "SMART" # destination exchange
+        mycontract.currency = "USD"
+        
+        self.submitOrder(orderId, mycontract, "BUY", 20)
+        
+    def submitOrder(self, reqId: int,  contractDetails: ContractDetails, action, quantity):
+        order = Order()
+        order.action = action
+        order.orderType = "MKT"
+        order.totalQuantity = quantity
 
-
-class ExecuteTrade():
-    pass
-
+        self.placeOrder(reqId, contractDetails, order)
+        self.disconnect()
 
 def main():
     SetupLogger()
     logging.debug("now is %s", datetime.datetime.now())
-    logging.getLogger().setLevel(logging.ERROR)
+    logging.getLogger().setLevel(logging.DEBUG)
     
-    testapi = DataFetching()
-    testapi.connect('127.0.0.1', port, clientId=0)
-    testapi.run()
+    # testapi = DataFetching()
+    # testapi.connect('127.0.0.1', port, clientId=0)
+    # testapi.run()
     
-    # testplaceorder = TestPlaceOrder()
-    # testplaceorder.connect('127.0.0.1', port, clientId=0)
-    # testplaceorder.run()
+    executeTrade = ExecuteTrade()
+    executeTrade.connect('127.0.0.1', port, clientId=0)
+    executeTrade.run()
 
 if __name__ == "__main__":
     main()
